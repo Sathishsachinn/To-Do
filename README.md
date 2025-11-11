@@ -1,4 +1,4 @@
-Colorful To-Do — Simple Client-side App
+ To-Do — Simple Client-side App
 
 What this is
 - A small To-Do web application built with HTML/CSS/JavaScript.
