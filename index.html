@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My To-Do — App</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/index.min.js"></script>
+  <script src="js/auth.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">To‑Do</div>
+    <div class="controls">
+      <button id="themeToggle" class="icon-btn" title="Toggle theme">🌗</button>
+      <button id="signOutBtn" class="btn small secondary"></button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card todo-panel">
+      <div class="panel-header">
+        <h2>Your Tasks</h2>
+        <div class="filters">
+          <input id="searchInput" placeholder="Search tasks..." style="padding:6px 8px;border-radius:8px;border:1px solid rgba(15,23,36,0.06);margin-right:8px" />
+          <select id="filterSel">
+            <option value="all">All</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+      </div>
+
+      <form id="addForm" class="add-form">
+        <input id="taskInput" placeholder="Add a new task..." autocomplete="off" />
+        <button class="btn">Add</button>
+      </form>
+
+      <ul id="taskList" class="task-list" aria-live="polite"></ul>
+
+      <div class="panel-footer">
+        <div id="stats" class="muted small">0 tasks</div>
+        <button id="clearCompleted" class="btn small danger">Clear completed</button>
+        <button id="clearAll" class="btn small danger light">Clear all</button>
+      </div>
+        <div style="display:flex;gap:8px;">
+          <button id="exportBtn" class="btn small">Export</button>
+          <button id="importBtn" class="btn small secondary">Import</button>
+          <input id="importFile" type="file" accept="application/json" style="display:none" />
+        </div>
+    </section>
+
+    <!-- Privacy panel: hidden by default until unlocked. -->
+    <section class="card privacy-panel" id="privacyPanel">
+      <div class="panel-header">
+        <h2>Private Tasks</h2>
+        <div>
+          <button id="privacyToggleBtn" class="btn small secondary">Unlock</button>
+          <button id="setPrivacyPwdBtn" class="btn small light">Set password</button>
+        </div>
+      </div>
+
+      <div id="privateLockedNotice" class="muted small" style="margin:10px 0">Private tasks are locked. Click "Unlock" and enter your password to view them.</div>
+      <ul id="privateList" class="task-list" aria-live="polite" style="display:none"></ul>
+    </section>
+
+    <!-- Privacy Password Modal -->
+    <div id="privacyModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Privacy — Enter Password</h3>
+          <button id="privacyModalClose" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding:16px;">
+          <div id="privacyPromptArea">
+            <label class="muted small">Enter privacy password to unlock private tasks</label>
+            <input id="privacyPwdInput" type="password" placeholder="Password" style="width:100%;padding:8px;margin-top:8px;border-radius:6px;border:1px solid rgba(15,23,36,0.06);" />
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
+              <button id="privacyCancelBtn" class="btn small light">Cancel</button>
+              <button id="privacyUnlockBtn" class="btn small">Unlock</button>
+            </div>
+            <div style="margin-top:10px;text-align:right;display:flex;gap:8px;justify-content:flex-end;align-items:center;">
+              <!-- Reset placed to the left of Change; styled as plain text button via .text-btn -->
+              <button id="privacyResetBtn" class="btn small text-btn" style="display:inline-block;">Reset password</button>
+              <button id="privacyChangeToggle" class="btn small light" style="display:inline-block;">Change password</button>
+            </div>
+          </div>
+
+          <div id="privacyChangeArea" style="display:none;margin-top:12px;">
+            <label class="muted small">Change privacy password (requires current password)</label>
+            <input id="privacyCurrentInput" type="password" placeholder="Current password" style="width:100%;padding:8px;margin-top:8px;border-radius:6px;border:1px solid rgba(15,23,36,0.06);" />
+            <input id="privacyNewInput" type="password" placeholder="New password" style="width:100%;padding:8px;margin-top:8px;border-radius:6px;border:1px solid rgba(15,23,36,0.06);" />
+            <input id="privacyConfirmNewInput" type="password" placeholder="Confirm new password" style="width:100%;padding:8px;margin-top:8px;border-radius:6px;border:1px solid rgba(15,23,36,0.06);" />
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
+              <button id="privacyChangeConfirmBtn" class="btn small">Change</button>
+            </div>
+          </div>
+          <!-- Reset confirmation area (choose to move or delete private tasks) -->
+          <div id="privacyResetArea" style="display:none;margin-top:12px;">
+            <div class="muted small">Resetting the privacy password will remove password protection. Choose to move private tasks to public or permanently delete them.</div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+              <button id="privacyResetCancel" class="btn small light">Cancel</button>
+              <button id="privacyResetMove" class="btn small">Move to public</button>
+              <button id="privacyResetDelete" class="btn small danger">Delete private</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="card info-panel">
+      <div class="user-info">
+        <img id="userPic" class="avatar" src="" alt="user" />
+        <div>
+          <div id="userName" class="strong">User</div>
+          <div id="userEmail" class="muted small">email</div>
+        </div>
+      </div>
+
+      <hr />
+      <h3>Tips</h3>
+      <ul class="muted small">
+        <li>Click a task to toggle complete.</li>
+        <li>Double-click text to edit.</li>
+      </ul>
+        <div style="margin-top:12px;">
+          <button id="viewFeedbackBtn" class="btn small light">View feedback</button>
+        </div>
+    </aside>
+  </main>
+
+  <footer class="footer muted small">
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1100px;margin:0 auto;">
+      <div style="display:flex;align-items:center;">
+        <button id="feedbackBtn" class="btn small secondary" title="Send feedback">💬 Feedback</button>
+      </div>
+
+      <div style="text-align:center;flex:0 1 auto;">© Sathish. All rights reserved.</div>
+
+      <div style="display:flex;align-items:center;">
+        <button id="scrollUpBtn" class="btn small secondary" title="Scroll to top">⬆️ Top</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Feedback Modal -->
+  <div id="feedbackModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Send Feedback</h3>
+        <button id="closeFeedbackBtn" class="modal-close">&times;</button>
+      </div>
+      <form id="feedbackForm" class="modal-body">
+        <textarea id="feedbackText" placeholder="Share your feedback..." rows="5" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(15,23,36,0.06);font-family:inherit;"></textarea>
+        <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
+          <button type="button" id="cancelFeedbackBtn" class="btn small light">Cancel</button>
+          <button type="submit" class="btn small">Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!-- Feedback Admin Modal (view stored feedbacks) -->
+  <div id="feedbackAdminModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Saved Feedback</h3>
+        <button id="closeFeedbackAdminBtn" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" style="max-height:60vh;overflow:auto;padding:16px;">
+        <ul id="feedbackList" style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px"></ul>
+        <div style="margin-top:12px;text-align:right;">
+          <button id="clearFeedbacksBtn" class="btn small light">Clear all feedback</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Toast container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+</body>
+</html>
